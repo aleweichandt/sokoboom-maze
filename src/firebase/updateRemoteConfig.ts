@@ -19,6 +19,9 @@ export const updateRemoteConfig = async (
         parameters: {}
       }
     }
+    if(group.parameters[key]) {
+      throw new Error(`entry for key: ${key} already present in group ${groupKey}`)
+    }
     
     // Update the parameters directly on the template object
     template.parameterGroups[groupKey] = {
