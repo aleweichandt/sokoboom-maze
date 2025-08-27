@@ -7,7 +7,7 @@ set -e  # Exit on any error (except in our controlled retry loop)
 
 # Configuration
 MAX_ATTEMPTS=90
-TIMEOUT_SECONDS=30  # 45 seconds timeout per attempt
+TIMEOUT_SECONDS=30  # timeout per attempt
 CURRENT_ATTEMPT=1
 SUCCESS=false
 
@@ -116,6 +116,7 @@ setup_timeout_command
 # Main retry loop
 log "🚀 Starting generator with timeout and retry logic..." "$BLUE"
 log "📋 Configuration: $MAX_ATTEMPTS max attempts, $(format_duration $TIMEOUT_SECONDS) timeout per attempt" "$BLUE"
+log "⚠️  Note: Only timeouts will be retried, other failures will exit immediately" "$YELLOW"
 
 START_TIME=$(date +%s)
 
@@ -143,14 +144,28 @@ while [ $CURRENT_ATTEMPT -le $MAX_ATTEMPTS ] && [ "$SUCCESS" = false ]; do
         
         if [ $EXIT_CODE -eq 124 ]; then
             log "⏰ Process timed out after $(format_duration $TIMEOUT_SECONDS)" "$RED"
+            
+            if [ $CURRENT_ATTEMPT -lt $MAX_ATTEMPTS ]; then
+                WAIT_TIME=$(calculate_wait_time $CURRENT_ATTEMPT)
+                log "⏳ Waiting $(format_duration $WAIT_TIME) before retry..." "$YELLOW"
+                sleep $WAIT_TIME
+            else
+                log "💥 All timeout retries exhausted" "$RED"
+            fi
         else
-            log "💥 Process failed with exit code: $EXIT_CODE" "$RED"
-        fi
-        
-        if [ $CURRENT_ATTEMPT -lt $MAX_ATTEMPTS ]; then
-            WAIT_TIME=$(calculate_wait_time $CURRENT_ATTEMPT)
-            log "⏳ Waiting $(format_duration $WAIT_TIME) before retry..." "$YELLOW"
-            sleep $WAIT_TIME
+            log "💥 Process failed with exit code: $EXIT_CODE (non-timeout failure)" "$RED"
+            log "🚫 Non-timeout failures are not retried - exiting immediately" "$RED"
+            log "🔍 Common non-timeout failures:" "$YELLOW"
+            log "   - Firebase authentication/permission errors" "$YELLOW"
+            log "   - Network connectivity issues" "$YELLOW"
+            log "   - Invalid configuration or missing dependencies" "$YELLOW"
+            log "   - Application logic errors in generator script" "$YELLOW"
+            
+            END_TIME=$(date +%s)
+            TOTAL_DURATION=$((END_TIME - START_TIME))
+            log "📊 Total runtime before failure: $(format_duration $TOTAL_DURATION)" "$RED"
+            
+            exit $EXIT_CODE
         fi
     fi
     
@@ -161,17 +176,17 @@ END_TIME=$(date +%s)
 TOTAL_DURATION=$((END_TIME - START_TIME))
 
 if [ "$SUCCESS" = false ]; then
-    log "💥 All $MAX_ATTEMPTS attempts failed. Generator could not complete successfully." "$RED"
+    log "💥 All timeout retries failed. Generator could not complete within time limit." "$RED"
     log "📊 Total runtime: $(format_duration $TOTAL_DURATION)" "$RED"
-    log "🔍 Troubleshooting tips:" "$YELLOW"
+    log "🔍 Troubleshooting timeout issues:" "$YELLOW"
     log "   - Check if your generator script has infinite loops" "$YELLOW"
-    log "   - Verify all required environment variables are set" "$YELLOW"
-    log "   - Check for network connectivity issues" "$YELLOW"
-    log "   - Review the logs above for specific error patterns" "$YELLOW"
+    log "   - Consider increasing TIMEOUT_SECONDS in the script" "$YELLOW"
+    log "   - Profile your generator to identify slow operations" "$YELLOW"
+    log "   - Check for network latency issues" "$YELLOW"
     if [ -z "$TIMEOUT_CMD" ]; then
         log "   - Consider installing coreutils for better timeout support: brew install coreutils" "$YELLOW"
     fi
-    exit 1
+    exit 124  # Exit with timeout code
 fi
 
 log "🎉 Generator completed successfully after $((CURRENT_ATTEMPT - 1)) attempt(s)" "$GREEN"
