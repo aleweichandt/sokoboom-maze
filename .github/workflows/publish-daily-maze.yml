@@ -1,0 +1,74 @@
+name: Update Remote Config Nightly
+
+on:
+  schedule:
+    # Runs every night at 2:00 AM UTC
+    # Adjust the time as needed (cron format: minute hour day month dayofweek)
+    - cron: '0 2 * * *'
+  
+  # Allow manual triggering of the workflow
+  workflow_dispatch:
+
+jobs:
+  update-remote-config:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'yarn'
+        cache-dependency-path: './yarn.lock'
+        
+    - name: Install dependencies
+      run: |
+        echo "📦 Installing dependencies with yarn..."
+        yarn install --frozen-lockfile
+        
+    - name: Run generator and update Remote Config
+      timeout-minutes: 45  # total timeout for all attempts
+      env:
+        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+        TIME_SECONDS_TO_SOLVE: ${{ vars.TIME_SECONDS_TO_SOLVE }}
+        MIN_MOVES_TO_SOLVE: ${{ vars.MIN_MOVES_TO_SOLVE }}
+        MAX_MOVES_TO_SOLVE: ${{ vars.MAX_MOVES_TO_SOLVE }}
+        NODE_ENV: production
+      run: |
+        ./retry-generator.sh
+        
+    - name: Notify on failure
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `❌ Remote Config Update Failed - ${new Date().toLocaleDateString()}`,
+            body: `The nightly Remote Config update failed on ${new Date().toISOString()}.
+            
+            **Workflow:** ${context.workflow}
+            **Run ID:** ${context.runId}
+            **Run URL:** https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+            **Commit:** ${context.sha.substring(0, 7)}
+            
+            ## Possible Issues:
+            - Firebase Remote Config permissions
+            - Environment variables missing or invalid
+            - Network connectivity issues
+            
+            Please check the workflow logs for detailed error information.`,
+            labels: ['bug', 'automated', 'remote-config', 'ci-cd']
+          });
+          
+    - name: Success notification
+      if: success()
+      run: |
+        echo "✅ Remote Config updated successfully!"
+        echo "📅 Date: $(date)"
+        echo "🔑 Key format: game$(date +'%y%m%d')"

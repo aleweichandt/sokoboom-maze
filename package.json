@@ -1,0 +1,21 @@
+{
+  "name": "generator",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "ts-node index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "^17.2.1",
+    "firebase-admin": "^13.4.0",
+    "typescript": "^5.9.2"
+  }
+}
