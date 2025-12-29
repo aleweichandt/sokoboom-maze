@@ -61,4 +61,4 @@ const mainScript = async () => {
   }
 }
 
-mainScript()
+mainScript();
