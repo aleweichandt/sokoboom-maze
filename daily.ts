@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import cleanOldMazes from './src/tasks/cleanOldMazes';
+import createDailyMaze from './src/tasks/createDailyMaze';
 
 const main = async () => {
   try {
-    await cleanOldMazes()
+    await createDailyMaze()
     console.log('===> Update complete') 
     process.exit(0)
   } catch(e) {

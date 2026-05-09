@@ -1,9 +1,9 @@
 {
   "name": "generator",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "daily.ts",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "ts-node daily.ts",
     "start:cleanup": "ts-node monthly.ts"
   },
   "author": "",

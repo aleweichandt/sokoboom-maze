@@ -1,22 +1,7 @@
-import 'dotenv/config';
-import { RemoteConfigParameter } from "firebase-admin/remote-config";
-import generate from "./src/maze";
-import { updateRemoteConfig } from "./src/firebase/updateRemoteConfig";
-
-const dayjs = require('dayjs');
-
-const getDailyGameId = (): string => {
-  if(process.env.GAME_KEY) {
-    return process.env.GAME_KEY
-  }
-
-  const date = dayjs().format('YYMMDD');
-  return `game${date}`
-}
-
-const getGroupId = (): string => {
-  return dayjs().format('YYMM');
-}
+import { RemoteConfigParameter } from "firebase-admin/remote-config"
+import { updateRemoteConfig } from "../firebase/updateRemoteConfig"
+import { getCurrentGroupId, getDailyGameId } from "./utils"
+import generate from "../maze"
 
 const getTimeToSolve = (
   _moves: number, // TODO use this later on
@@ -27,7 +12,7 @@ const getTimeToSolve = (
   return 2 * 60 * 1000 // 2 mins
 }
 
-const deployUpdate = async () => {
+const createDailyMaze = async () => {
   const minSolutionMoves = process.env.MIN_MOVES_TO_SOLVE ? parseInt(process.env.MIN_MOVES_TO_SOLVE, 10) : undefined
   const miaxolutionMoves = process.env.MAX_MOVES_TO_SOLVE ? parseInt(process.env.MAX_MOVES_TO_SOLVE, 10) : undefined
   const [maze, moves] = generate(
@@ -36,7 +21,7 @@ const deployUpdate = async () => {
   )
 
   // get daily key
-  const groupKey = getGroupId()
+  const groupKey = getCurrentGroupId()
   const gameKey = getDailyGameId()
   const timeToSolve = getTimeToSolve(moves)
 
@@ -50,15 +35,4 @@ const deployUpdate = async () => {
   await updateRemoteConfig(groupKey, gameKey, dailyUpdate)
 }
 
-const mainScript = async () => {
-  try {
-    await deployUpdate()
-    console.log('===> Update complete')
-    process.exit(0)
-  } catch(e) {
-    console.error(e)
-    process.exit(1)
-  }
-}
-
-mainScript();
+export default createDailyMaze;
