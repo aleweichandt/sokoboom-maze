@@ -1,4 +1,4 @@
-import { getRemoteConfig, RemoteConfigParameter, RemoteConfigParameterGroup } from 'firebase-admin/remote-config';
+import { getRemoteConfig, RemoteConfigParameterGroup } from 'firebase-admin/remote-config';
 import getInstance from "./getInstance"
 
 export const removeGroupFromConfig = async (
