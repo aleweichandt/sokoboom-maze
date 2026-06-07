@@ -60,6 +60,8 @@ const buildMessage = (
             priority: "high",
             notification: {
                 channelId: "DEFAULT",
+                icon: 'ic_notification',
+                color: '#3d88c1',
             },
         },
         apns: {

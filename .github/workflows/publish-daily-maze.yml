@@ -2,9 +2,9 @@ name: Update Remote Config Nightly
 
 on:
   schedule:
-    # Runs every night at 2:00 AM UTC
+    # Runs every night at 9:00 AM UTC, after Google Play Game Leaderboards reset
     # Adjust the time as needed (cron format: minute hour day month dayofweek)
-    - cron: '0 2 * * *'
+    - cron: '0 9 * * *'
   
   # Allow manual triggering of the workflow
   workflow_dispatch:
