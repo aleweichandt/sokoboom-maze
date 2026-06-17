@@ -16,7 +16,7 @@ const DAILY_MESSAGE_CONTENT = {
 
 const submitDailyGameNotification = async () => {
     const dailyGameId = getDailyGameId()
-    const deeplink = `sokoboom://games/${dailyGameId}`
+    const deeplink = `sokoboom://game/${dailyGameId}`
     await broadcastMessage('daily-challenge', DAILY_MESSAGE_CONTENT, { deeplink })
 }
 
