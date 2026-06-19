@@ -4,7 +4,7 @@ on:
   schedule:
     # Runs every night at 7:30 AM UTC, after Google Play Game Leaderboards reset
     # Adjust the time as needed (cron format: minute hour day month dayofweek)
-    - cron: '0 7 30 * *'
+    - cron: '30 7 * * *'
   
   # Allow manual triggering of the workflow
   workflow_dispatch:
